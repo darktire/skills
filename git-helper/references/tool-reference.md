@@ -135,7 +135,84 @@ python scripts/git_tool.py branch --repo <repo_path> --branch-type all --not-con
 
 等效 Git 命令：`git branch`、`git branch -r` 或 `git branch -a`，可附加 `--contains` / `--no-contains`。拒绝以 `-` 开头的包含关系值。
 
+### git_stash_push
+
+搁置当前工作区变更。
+
+```bash
+python scripts/git_tool.py stash-push --repo <repo_path>
+python scripts/git_tool.py stash-push --repo <repo_path> --message "WIP before switching branches"
+python scripts/git_tool.py stash-push --repo <repo_path> --include-untracked --message "Include new files"
+```
+
+等效 Git 命令：`git stash push [-m <message>] [--include-untracked]`。仅在用户希望临时保存当前工作区变更时使用；需要保留未跟踪文件时显式传入 `--include-untracked`。
+
+### git_stash_list
+
+列出 stash 记录。
+
+```bash
+python scripts/git_tool.py stash-list --repo <repo_path>
+```
+
+等效 Git 命令：`git stash list`。
+
+### git_stash_apply
+
+应用指定 stash，但保留 stash 记录。
+
+```bash
+python scripts/git_tool.py stash-apply --repo <repo_path>
+python scripts/git_tool.py stash-apply --repo <repo_path> --stash-ref "stash@{1}"
+```
+
+等效 Git 命令：`git stash apply <stash_ref>`。默认引用为 `stash@{0}`。拒绝以 `-` 开头的 stash 引用。
+
+### git_stash_pop
+
+应用指定 stash，并在成功后移除该 stash。
+
+```bash
+python scripts/git_tool.py stash-pop --repo <repo_path>
+python scripts/git_tool.py stash-pop --repo <repo_path> --stash-ref "stash@{1}"
+```
+
+等效 Git 命令：`git stash pop <stash_ref>`。默认引用为 `stash@{0}`。恢复时可能产生冲突，执行前先确认当前工作区状态。
+
+### git_stash_drop
+
+删除指定 stash。
+
+```bash
+python scripts/git_tool.py stash-drop --repo <repo_path> --stash-ref "stash@{2}"
+```
+
+等效 Git 命令：`git stash drop <stash_ref>`。这是丢弃已搁置内容的操作，执行前确认目标引用。拒绝以 `-` 开头的 stash 引用。
+
+### git_amend_message
+
+修改当前 HEAD 历史中指定未推送本地提交的提交消息。
+
+```bash
+python scripts/git_tool.py amend-message --repo <repo_path> --revision <revision>
+python scripts/git_tool.py amend-message --repo <repo_path> --revision <revision> --message "New commit message"
+```
+
+未提供 `--message` 时返回原消息；提供 `--message` 时执行修改。操作会自动搁置并恢复工作区变更，且拒绝已推送提交。
+
+### git_squash_local
+
+将指定连续范围内的未推送本地提交压缩为一个提交。
+
+```bash
+python scripts/git_tool.py squash-local --repo <repo_path> --from-revision <oldest> --to-revision <newest>
+python scripts/git_tool.py squash-local --repo <repo_path> --from-revision <oldest> --to-revision <newest> --message "Combined commit message"
+```
+
+使用 `--from-revision` / `--to-revision` 指定连续范围。未提供 `--message` 时返回原消息列表；提供 `--message` 时执行压缩。操作会自动搁置并恢复工作区变更，且拒绝已推送提交。
+
 ## 运行时说明
 
 - 仓库访问受本地文件系统和工具权限控制。
 - 脚本依赖 PATH 中可用的 `git` 可执行文件。
+- 修改本地历史的操作会改变提交哈希；仅对未推送提交使用。
